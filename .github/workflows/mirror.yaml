@@ -1,4 +1,4 @@
-name: PIG 镜像 action
+name: Sync Docker  Image
 
 on:
   workflow_dispatch:
