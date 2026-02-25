@@ -45,7 +45,7 @@ jobs:
             --tag ${{ github.event.inputs.TARGET_REGISTRY }}/${{ github.event.inputs.TARGET_REPOSITORY }}/${{ github.event.inputs.NEW_NAME }}:${{ github.event.inputs.IMAGE_VERSION }}
 
       - name: qyweixin send message
-        if: ${{ env.QYWX_ROBOT_URL != '' }}
+        if: ${{ always() && env.QYWX_ROBOT_URL != '' }}
         uses: chf007/action-wechat-work@master
         env:
           WECHAT_WORK_BOT_WEBHOOK: ${{secrets.QYWX_ROBOT_URL}}
@@ -53,16 +53,17 @@ jobs:
         with:
           msgtype: markdown
           content: |
-            # 镜像同步成功
+            # 镜像同步${{ job.status == 'success' && '成功' || '失败' }}
+            > 状态: ${{ job.status }}
             ```
             ${{ env.IMAGE_URL }}
             ```
 
       - name: telegram send message
-        if: ${{ env.TELEGRAM_BOT_TOKEN != '' && env.TELEGRAM_CHAT_ID != '' }}
+        if: ${{ always() && env.TELEGRAM_BOT_TOKEN != '' && env.TELEGRAM_CHAT_ID != '' }}
         env:
           IMAGE_URL: ${{ github.event.inputs.TARGET_REGISTRY }}/${{ github.event.inputs.TARGET_REPOSITORY }}/${{ github.event.inputs.NEW_NAME }}:${{ github.event.inputs.IMAGE_VERSION }}
         run: |
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d text="镜像同步成功: ${{ env.IMAGE_URL }}"
+            -d text="镜像同步${{ job.status == 'success' && '成功' || '失败' }} [${{ job.status }}]: ${{ env.IMAGE_URL }}"
