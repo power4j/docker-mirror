@@ -13,11 +13,17 @@ jobs:
       - name: Send Telegram test message
         if: ${{ env.TELEGRAM_BOT_TOKEN != '' && env.TELEGRAM_CHAT_ID != '' }}
         run: |
+          message=$(cat <<'EOF'
+          [TEST] Telegram notification test
+          Repository: ${{ github.repository }}
+          Workflow: ${{ github.workflow }}
+          Run ID: ${{ github.run_id }}
+          Triggered by: ${{ github.actor }}
+          Timestamp: __TS__
+          EOF
+          )
+          message="${message/__TS__/$(date -u '+%Y-%m-%d %H:%M:%S UTC')}"
+
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d text="[TEST] Telegram notification test
-Repository: ${{ github.repository }}
-Workflow: ${{ github.workflow }}
-Run ID: ${{ github.run_id }}
-Triggered by: ${{ github.actor }}
-Timestamp: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+            --data-urlencode text="$message"
